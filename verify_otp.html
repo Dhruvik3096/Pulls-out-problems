@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify OTP - PoCkEt WoRld</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* Same CSS as login.html for consistency */
+:root {
+  --bg-base:      #080c14;
+  --bg-card:      rgba(255,255,255,0.03);
+  --border:       rgba(255,255,255,0.08);
+  --border-glow:  rgba(99,179,237,0.4);
+  --neon-blue:    #38bdf8;
+  --neon-purple:  #a78bfa;
+  --text-primary: #e2e8f0;
+  --text-muted:   #64748b;
+  --text-dim:     #475569;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+/* Background Grid & Glows */
+body::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+}
+.glow-orb {
+  position: absolute; width: 600px; height: 600px; border-radius: 50%;
+  filter: blur(120px); opacity: 0.15; z-index: 0;
+}
+.glow-1 { top: -200px; left: -200px; background: var(--neon-blue); }
+.glow-2 { bottom: -200px; right: -200px; background: var(--neon-purple); }
+
+.login-card {
+  position: relative; z-index: 10;
+  width: 100%; max-width: 420px;
+  background: rgba(13,18,32,0.6);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.app-logo {
+  text-align: center; margin-bottom: 32px;
+}
+.logo-icon {
+  width: 56px; height: 56px; margin: 0 auto 16px;
+  background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: #fff;
+  box-shadow: 0 0 30px rgba(56,189,248,0.5);
+}
+.logo-text {
+  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+  background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.app-sub {
+  font-size: 13px; color: var(--text-muted); font-weight: 500; margin-top: 4px;
+}
+h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+p.sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+
+.form-group { margin-bottom: 24px; }
+.form-label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+}
+.input-wrap { position: relative; }
+.input-icon {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--text-dim); font-size: 15px; transition: color 0.2s;
+}
+.form-control {
+  width: 100%; padding: 14px 16px 14px 44px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border); border-radius: 12px;
+  color: var(--text-primary); font-size: 24px; letter-spacing: 8px; text-align: center;
+  outline: none; transition: all 0.2s;
+}
+.form-control:focus {
+  border-color: var(--border-glow); box-shadow: 0 0 0 4px rgba(56,189,248,0.1);
+}
+.form-control:focus + .input-icon, .form-control:not(:placeholder-shown) + .input-icon {
+  color: var(--neon-blue);
+}
+.btn-login {
+  width: 100%; padding: 14px; margin-top: 8px;
+  background: linear-gradient(135deg, var(--neon-blue), #0ea5e9);
+  color: #fff; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 0 20px rgba(56,189,248,0.4); transition: all 0.2s;
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(56,189,248,0.6); }
+
+.back-link {
+  display: block; text-align: center; margin-top: 24px;
+  font-size: 13px; color: var(--text-muted); text-decoration: none;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--neon-blue); }
+
+.flash-message {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; margin-bottom: 20px;
+}
+.flash-error { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); color: var(--neon-red); }
+.flash-info { background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.2); color: var(--neon-blue); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+</head>
+<body>
+<div class="glow-orb glow-1"></div>
+<div class="glow-orb glow-2"></div>
+
+<div class="login-card">
+  <div class="app-logo">
+    <div class="logo-icon"><i class="fas fa-cube"></i></div>
+    <div class="logo-text">PoCkEt WoRld</div>
+    <div class="app-sub">Password Recovery</div>
+  </div>
+
+  <h2>Verify OTP</h2>
+  <p class="sub">Enter the 6-digit confirmation code we sent to your email.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, msg in messages %}
+        <div class="flash-message {% if category == 'error' %}flash-error{% else %}flash-info{% endif %}">
+          <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST">
+    <div class="form-group">
+      <label class="form-label">Confirmation Code</label>
+      <div class="input-wrap">
+        <i class="fas fa-key input-icon"></i>
+        <input type="text" name="otp" class="form-control" placeholder="000000" maxlength="6" required autofocus autocomplete="off">
+      </div>
+    </div>
+    
+    <button type="submit" class="btn-login">
+      Verify Code <i class="fas fa-chevron-right"></i>
+    </button>
+  </form>
+
+  <a href="{{ url_for('login') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Login</a>
+</div>
+
+</body>
+</html>

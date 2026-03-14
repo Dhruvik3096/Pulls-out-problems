@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Products — PoCkEt WoRld{% endblock %}
+{% block page_title %}Products{% endblock %}
+
+{% block content %}
+<div class="fade-up">
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div>
+        <div class="section-title">All Products</div>
+        <div class="section-sub">{{ products|length }} products in inventory</div>
+      </div>
+      <a href="{{ url_for('add_product') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Product</a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div style="padding:14px 24px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;">
+      <div style="position:relative;flex:1;max-width:300px;">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:13px;"></i>
+        <input type="text" id="prodSearch" placeholder="Search products…"
+          style="width:100%;padding:8px 12px 8px 34px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:13px;outline:none;">
+      </div>
+      <select id="statusFilter"
+        style="padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:13px;outline:none;">
+        <option value="">All Status</option>
+        <option value="In Stock">In Stock</option>
+        <option value="Low Stock">Low Stock</option>
+        <option value="Out of Stock">Out of Stock</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table id="prodTable">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Stock</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          {% set status = get_stock_status(p.quantity) %}
+          <tr data-status="{{ status }}">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,rgba(56,189,248,0.12),rgba(167,139,250,0.12));display:flex;align-items:center;justify-content:center;">
+                  <i class="fas fa-box" style="color:var(--neon-blue);font-size:14px;"></i>
+                </div>
+                <div>
+                  <strong>{{ p.name }}</strong>
+                  <div style="font-size:11px;color:var(--text-muted);">#{{ p.id }}</div>
+                </div>
+              </div>
+            </td>
+            <td><code style="font-size:12px;color:var(--text-muted);background:rgba(255,255,255,0.04);padding:2px 7px;border-radius:4px;">{{ p.sku }}</code></td>
+            <td><span style="border:1px solid var(--border);padding:3px 10px;border-radius:20px;font-size:12px;color:var(--text-muted);">{{ p.category }}</span></td>
+            <td>
+              <span style="font-weight:700;font-size:16px;color:{% if p.quantity==0 %}var(--neon-red){% elif p.quantity<10 %}var(--neon-orange){% else %}var(--neon-green){% endif %};">
+                {{ p.quantity }}
+              </span>
+            </td>
+            <td><i class="fas fa-map-marker-alt" style="color:var(--neon-purple);margin-right:5px;"></i>{{ p.location }}</td>
+            <td>
+              {% if status == 'In Stock' %}<span class="badge badge-green"><span class="badge-dot"></span>In Stock</span>
+              {% elif status == 'Low Stock' %}<span class="badge badge-orange"><span class="badge-dot"></span>Low Stock</span>
+              {% else %}<span class="badge badge-red"><span class="badge-dot"></span>Out of Stock</span>{% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <form method="POST" action="{{ url_for('edit_product', id=p.id) }}" style="display:flex;gap:5px;">
+                  <input type="number" name="quantity" value="{{ p.quantity }}" min="0"
+                    style="width:65px;padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;outline:none;">
+                  <button type="submit" class="btn btn-ghost btn-sm"><i class="fas fa-check"></i> Save</button>
+                </form>
+                <a href="{{ url_for('delete_product', id=p.id) }}"
+                  onclick="return confirm('Delete {{ p.name }}?')"
+                  class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;padding:48px;color:var(--text-muted);">
+            <i class="fas fa-box-open" style="font-size:36px;display:block;margin-bottom:12px;opacity:0.3;"></i>
+            No products found. <a href="{{ url_for('add_product') }}" style="color:var(--neon-blue);">Add one →</a>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function filterTable() {
+  const q = document.getElementById('prodSearch').value.toLowerCase();
+  const s = document.getElementById('statusFilter').value;
+  document.querySelectorAll('#prodTable tbody tr').forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const status = row.dataset.status || '';
+    row.style.display = (text.includes(q) && (!s || status === s)) ? '' : 'none';
+  });
+}
+document.getElementById('prodSearch').addEventListener('input', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+</script>
+{% endblock %}

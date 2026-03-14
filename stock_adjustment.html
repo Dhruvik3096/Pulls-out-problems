@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Stock Adjustment — PoCkEt WoRld{% endblock %}
+{% block page_title %}Stock Adjustment{% endblock %}
+
+{% block content %}
+<div class="fade-up" style="display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;">
+
+  <!-- Adjustment Form -->
+  <div class="card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);">
+      <div style="width:40px;height:40px;border-radius:10px;background:rgba(251,146,60,0.12);display:flex;align-items:center;justify-content:center;">
+        <i class="fas fa-sliders-h" style="color:var(--neon-orange);"></i>
+      </div>
+      <div>
+        <div class="section-title">New Adjustment</div>
+        <div class="section-sub">Correct stock quantities manually</div>
+      </div>
+    </div>
+
+    <form method="POST">
+      <div class="form-group">
+        <label class="form-label">Product</label>
+        <select name="product_id" class="form-control" required>
+          <option value="" disabled selected>Select product</option>
+          {% for p in products %}
+          <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.quantity }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Adjustment Qty</label>
+        <input type="number" name="adjustment" class="form-control"
+          placeholder="e.g. +10 or -5" required>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:5px;">
+          Use positive (+) to add stock, negative (-) to remove.
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason</label>
+        <input type="text" name="reason" class="form-control" placeholder="e.g. Damaged, cycle count…">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">
+        <i class="fas fa-check"></i> Apply Adjustment
+      </button>
+    </form>
+  </div>
+
+  <!-- History -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);">
+      <div class="section-title">Adjustment History</div>
+      <div class="section-sub">Last 20 adjustments</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Product</th>
+            <th>Adjustment</th>
+            <th>Reason</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in adjustments %}
+          <tr>
+            <td><code style="color:var(--neon-orange);background:rgba(251,146,60,0.07);padding:2px 8px;border-radius:4px;font-size:12px;">{{ a.reference }}</code></td>
+            <td><strong>{{ a.product_name or '—' }}</strong></td>
+            <td style="font-weight:700;color:{% if a.adjustment >= 0 %}var(--neon-green){% else %}var(--neon-red){% endif %};">
+              {% if a.adjustment >= 0 %}+{% endif %}{{ a.adjustment }}
+            </td>
+            <td style="color:var(--text-muted);font-size:12px;">{{ a.reason or '—' }}</td>
+            <td style="color:var(--text-muted);font-size:12px;">{{ a.created_at[:10] if a.created_at else '—' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">No adjustments yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

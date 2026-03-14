@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Deliveries — PoCkEt WoRld{% endblock %}
+{% block page_title %}Deliveries{% endblock %}
+
+{% block content %}
+<div class="fade-up">
+  <!-- Add Delivery Form -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div style="padding: 0 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px;">
+      <div class="section-title">Dispatch Delivery</div>
+      <div class="section-sub">Record outgoing shipments to customers or destinations</div>
+    </div>
+    <form method="POST" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 200px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;">Product</label>
+        <select name="product_id" class="form-control" required style="padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); width: 100%;">
+          {% for p in products %}
+            <option value="{{ p.id }}">{{ p.name }} (Stock: {{ p.quantity }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;">Customer / Destination</label>
+        <input type="text" name="customer" class="form-control" placeholder="Customer Name" required style="padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); width: 100%;">
+      </div>
+      <div style="width: 100px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;">Qty</label>
+        <input type="number" name="quantity" class="form-control" value="1" min="1" required style="padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); width: 100%;">
+      </div>
+      <div style="flex: 1; min-width: 150px;">
+        <label style="display:block;font-size:12px;color:var(--text-muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;">Reference (Optional)</label>
+        <input type="text" name="reference" class="form-control" placeholder="DEL-123" style="padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); width: 100%;">
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary" style="padding: 11px 24px; border-radius: 8px;"><i class="fas fa-truck"></i> Dispatch</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Historical Table -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div>
+        <div class="section-title">Outgoing Deliveries</div>
+        <div class="section-sub">All customer and destination deliveries</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Product</th>
+            <th>Destination</th>
+            <th>Quantity</th>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deliveries %}
+          <tr>
+            <td><code style="color:var(--neon-purple);background:rgba(167,139,250,0.07);padding:2px 8px;border-radius:4px;font-size:12px;">{{ d.reference }}</code></td>
+            <td><strong>{{ d.product_name or '—' }}</strong></td>
+            <td><i class="fas fa-map-marker-alt" style="color:var(--neon-orange);margin-right:6px;"></i>{{ d.customer }}</td>
+            <td style="font-weight:700;color:var(--neon-red);">-{{ d.quantity }}</td>
+            <td style="color:var(--text-muted);font-size:12px;">{{ d.created_at[:10] if d.created_at else '—' }}</td>
+            <td>
+              {% if d.status == 'Done' %}
+                <span class="badge badge-green"><span class="badge-dot"></span>Done</span>
+              {% else %}
+                <span class="badge badge-orange"><span class="badge-dot"></span>Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" style="text-align:center;padding:48px;color:var(--text-muted);">
+            <i class="fas fa-truck" style="font-size:36px;display:block;margin-bottom:12px;opacity:0.3;"></i>
+            No deliveries found.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PoCkEt WoRld{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="fade-up">
+
+  <!-- ── Stat Cards ──────────────────────────────────── -->
+  <div class="stats-grid">
+    <div class="stat-card blue">
+      <div class="stat-icon blue"><i class="fas fa-boxes"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Total Products</div>
+        <div class="stat-value" style="color:var(--neon-blue);">{{ total_products }}</div>
+        <div class="stat-sub">Across all categories</div>
+      </div>
+    </div>
+    <div class="stat-card orange">
+      <div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Low Stock Items</div>
+        <div class="stat-value" style="color:var(--neon-orange);">{{ low_stock }}</div>
+        <div class="stat-sub">Need restocking soon</div>
+      </div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Out of Stock</div>
+        <div class="stat-value" style="color:var(--neon-red);">{{ out_of_stock }}</div>
+        <div class="stat-sub">Requires immediate action</div>
+      </div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-icon green"><i class="fas fa-file-import"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Pending Receipts</div>
+        <div class="stat-value" style="color:var(--neon-green);">{{ pending_receipts }}</div>
+        <div class="stat-sub">Awaiting confirmation</div>
+      </div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-icon purple"><i class="fas fa-truck"></i></div>
+      <div class="stat-body">
+        <div class="stat-label">Pending Deliveries</div>
+        <div class="stat-value" style="color:var(--neon-purple);">{{ pending_deliveries }}</div>
+        <div class="stat-sub">In transit</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Charts + Recent Row ──────────────────────────── -->
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:28px;">
+
+    <!-- Stock Activity Chart -->
+    <div class="card" style="padding:24px;">
+      <div class="section-header" style="margin-bottom:16px;">
+        <div>
+          <div class="section-title">Stock Activity</div>
+          <div class="section-sub">Incoming vs Outgoing inventory – last 7 weeks</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--neon-blue);">
+            <span style="width:10px;height:10px;background:var(--neon-blue);border-radius:2px;display:inline-block;"></span> Incoming
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--neon-purple);">
+            <span style="width:10px;height:10px;background:var(--neon-purple);border-radius:2px;display:inline-block;"></span> Outgoing
+          </span>
+        </div>
+      </div>
+      <canvas id="stockChart" height="140"></canvas>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="card" style="padding:24px;">
+      <div class="section-title" style="margin-bottom:16px;">Category Split</div>
+      <canvas id="categoryChart" height="180"></canvas>
+    </div>
+  </div>
+
+  <!-- ── Product Inventory Table ─────────────────────── -->
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <div>
+        <div class="section-title">Product Inventory</div>
+        <div class="section-sub">{{ total_products }} products total</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <a href="{{ url_for('add_product') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Product</a>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="productTable">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>SKU</th>
+            <th>Category</th>
+            <th>Stock</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products %}
+          {% set status = get_stock_status(p.quantity) %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,rgba(56,189,248,0.15),rgba(167,139,250,0.15));display:flex;align-items:center;justify-content:center;font-size:14px;">
+                  <i class="fas fa-box" style="color:var(--neon-blue);"></i>
+                </div>
+                <strong>{{ p.name }}</strong>
+              </div>
+            </td>
+            <td><span style="font-family:monospace;color:var(--text-muted);font-size:12px;">{{ p.sku }}</span></td>
+            <td>{{ p.category }}</td>
+            <td>
+              <span style="font-weight:700;font-size:15px;
+                color:{% if p.quantity == 0 %}var(--neon-red){% elif p.quantity < 10 %}var(--neon-orange){% else %}var(--neon-green){% endif %};">
+                {{ p.quantity }}
+              </span>
+            </td>
+            <td>
+              <span style="display:flex;align-items:center;gap:5px;color:var(--text-muted);font-size:12px;">
+                <i class="fas fa-map-marker-alt" style="color:var(--neon-purple);"></i>{{ p.location }}
+              </span>
+            </td>
+            <td>
+              {% if status == 'In Stock' %}
+                <span class="badge badge-green"><span class="badge-dot"></span>In Stock</span>
+              {% elif status == 'Low Stock' %}
+                <span class="badge badge-orange"><span class="badge-dot"></span>Low Stock</span>
+              {% else %}
+                <span class="badge badge-red"><span class="badge-dot"></span>Out of Stock</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <form method="POST" action="{{ url_for('edit_product', id=p.id) }}" style="display:flex;gap:5px;">
+                  <input type="number" name="quantity" value="{{ p.quantity }}" min="0"
+                    style="width:62px;padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);font-size:12px;outline:none;">
+                  <button type="submit" class="btn btn-ghost btn-sm" title="Save">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </form>
+                <a href="{{ url_for('delete_product', id=p.id) }}"
+                  onclick="return confirm('Delete {{ p.name }} permanently?')"
+                  class="btn btn-danger btn-sm" title="Delete">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" style="text-align:center;padding:48px;color:var(--text-muted);">
+              <i class="fas fa-box-open" style="font-size:36px;margin-bottom:12px;display:block;opacity:0.3;"></i>
+              No products yet. <a href="{{ url_for('add_product') }}" style="color:var(--neon-blue);">Add your first product →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// ── Stock Activity Chart ─────────────────────────────────
+const weeks = ['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7'];
+const incoming = [42, 78, 55, 91, 63, 110, 85];
+const outgoing  = [30, 55, 70, 48, 82,  67, 95];
+
+const gradient1 = (ctx) => {
+  const g = ctx.createLinearGradient(0,0,0,220);
+  g.addColorStop(0,'rgba(56,189,248,0.35)');
+  g.addColorStop(1,'rgba(56,189,248,0)');
+  return g;
+};
+const gradient2 = (ctx) => {
+  const g = ctx.createLinearGradient(0,0,0,220);
+  g.addColorStop(0,'rgba(167,139,250,0.35)');
+  g.addColorStop(1,'rgba(167,139,250,0)');
+  return g;
+};
+
+const stockCtx = document.getElementById('stockChart').getContext('2d');
+new Chart(stockCtx, {
+  type: 'line',
+  data: {
+    labels: weeks,
+    datasets: [
+      {
+        label: 'Incoming',
+        data: incoming,
+        borderColor: '#38bdf8',
+        borderWidth: 2.5,
+        backgroundColor: gradient1(stockCtx),
+        pointBackgroundColor: '#38bdf8',
+        pointRadius: 4, pointHoverRadius: 6,
+        tension: 0.4, fill: true
+      },
+      {
+        label: 'Outgoing',
+        data: outgoing,
+        borderColor: '#a78bfa',
+        borderWidth: 2.5,
+        backgroundColor: gradient2(stockCtx),
+        pointBackgroundColor: '#a78bfa',
+        pointRadius: 4, pointHoverRadius: 6,
+        tension: 0.4, fill: true
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0d1220',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        titleColor: '#e2e8f0',
+        bodyColor: '#94a3b8',
+        padding: 12
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+           ticks: { color: '#64748b', font: { size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)', drawBorder: false },
+           ticks: { color: '#64748b', font: { size: 11 } } }
+    }
+  }
+});
+
+// ── Category Donut Chart ─────────────────────────────────
+const products = {{ products_json | tojson }};
+const catMap = {};
+products.forEach(p => { catMap[p.category] = (catMap[p.category]||0) + p.quantity; });
+const catLabels = Object.keys(catMap);
+const catData   = Object.values(catMap);
+const catColors = ['#38bdf8','#a78bfa','#34d399','#fb923c','#f87171','#60a5fa','#f472b6'];
+
+const catCtx = document.getElementById('categoryChart').getContext('2d');
+new Chart(catCtx, {
+  type: 'doughnut',
+  data: {
+    labels: catLabels,
+    datasets: [{
+      data: catData,
+      backgroundColor: catColors.slice(0, catLabels.length),
+      borderWidth: 2,
+      borderColor: '#080c14',
+      hoverBorderColor: '#0d1220'
+    }]
+  },
+  options: {
+    cutout: '65%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: '#64748b', font: { size: 11 }, padding: 12, boxWidth: 12 }
+      },
+      tooltip: {
+        backgroundColor: '#0d1220',
+        borderColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        titleColor: '#e2e8f0',
+        bodyColor: '#94a3b8',
+        padding: 12
+      }
+    }
+  }
+});
+
+// ── Live table search ────────────────────────────────────
+document.getElementById('globalSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('#productTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

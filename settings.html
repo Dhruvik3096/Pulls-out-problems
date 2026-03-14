@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Settings — PoCkEt WoRld{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="fade-up" style="max-width:680px;">
+
+  <!-- Account -->
+  <div class="card" style="margin-bottom:16px;">
+    <div style="padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;">
+        {{ username[0]|upper if username else 'A' }}
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;">{{ username|title if username else 'Admin' }}</div>
+        <div style="font-size:12px;color:var(--text-muted);">Administrator · PoCkEt WoRld</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" value="{{ username or 'admin' }}" disabled style="opacity:0.6;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <input type="text" class="form-control" value="Administrator" disabled style="opacity:0.6;">
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="section-title" style="margin-bottom:18px;">System Preferences</div>
+    <div class="form-group">
+      <label class="form-label">Default Currency</label>
+      <select class="form-control">
+        <option>USD — US Dollar</option>
+        <option>EUR — Euro</option>
+        <option>INR — Indian Rupee</option>
+        <option>GBP — British Pound</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Low Stock Threshold</label>
+      <input type="number" class="form-control" value="10" min="1">
+      <div style="font-size:11px;color:var(--text-dim);margin-top:5px;">Items below this quantity are marked as Low Stock.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Timezone</label>
+      <select class="form-control">
+        <option>Asia/Kolkata (IST)</option>
+        <option>UTC</option>
+        <option>America/New_York (EST)</option>
+        <option>Europe/London (GMT)</option>
+      </select>
+    </div>
+    <button class="btn btn-primary"><i class="fas fa-save"></i> Save Preferences</button>
+  </div>
+
+  <!-- Notifications -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="section-title" style="margin-bottom:18px;">Notifications</div>
+    {% set notifs = [
+      ('Low Stock Alerts', 'Get notified when items fall below threshold', true),
+      ('Pending Receipt Reminders', 'Remind when receipts are awaiting action', true),
+      ('Daily Digest Email', 'Receive a daily inventory summary', false),
+    ] %}
+    {% for label, desc, checked in notifs %}
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px;font-weight:600;">{{ label }}</div>
+        <div style="font-size:12px;color:var(--text-muted);">{{ desc }}</div>
+      </div>
+      <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+        <input type="checkbox" {% if checked %}checked{% endif %} style="opacity:0;width:0;height:0;">
+        <span style="position:absolute;inset:0;border-radius:12px;background:{% if checked %}var(--neon-blue){% else %}rgba(255,255,255,0.1){% endif %};box-shadow:{% if checked %}0 0 12px rgba(56,189,248,0.4){% else %}none{% endif %};transition:background 0.2s;">
+          <span style="position:absolute;left:{% if checked %}22px{% else %}2px{% endif %};top:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left 0.2s;"></span>
+        </span>
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="card" style="border-color:rgba(248,113,113,0.2);">
+    <div class="section-title" style="margin-bottom:6px;color:var(--neon-red);">
+      <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>Danger Zone
+    </div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Irreversible actions. Proceed with caution.</div>
+    <a href="{{ url_for('logout') }}" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> Logout</a>
+  </div>
+
+</div>
+{% endblock %}
